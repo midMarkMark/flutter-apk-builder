@@ -4,74 +4,98 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Flutter APK Builder</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/nord.min.css">
 <style>
-  :root { color-scheme: dark; --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --green:#238636; --green2:#2ea043; --red:#f85149; --purple:#a371f7; }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin:0; height:100%; overflow:hidden; }
-  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; }
+:root { color-scheme: dark; --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --green:#238636; --green2:#2ea043; --red:#f85149; --purple:#a371f7; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { margin:0; height:100%; overflow:hidden; }
+body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; }
 
-  header { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--panel); border-bottom:1px solid var(--border); padding-top: calc(10px + env(safe-area-inset-top)); }
-  #burger { width:42px; height:42px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); font-size:19px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
-  header h1 { font-size:16px; margin:0; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  header h1 span { color:var(--accent); }
-  #newBtn { padding:10px 14px; border-radius:10px; border:0; cursor:pointer; flex-shrink:0; background:var(--green); color:#fff; font-size:13px; font-weight:700; }
-  #newBtn:active { background:var(--green2); }
+header { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--panel); border-bottom:1px solid var(--border); padding-top:calc(10px + env(safe-area-inset-top)); }
+#burger { width:42px; height:42px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); font-size:19px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+header h1 { font-size:16px; margin:0; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+header h1 span { color:var(--accent); }
+.header-btns { display:flex; gap:6px; flex-shrink:0; }
+.header-btns button { padding:10px 14px; border-radius:10px; border:0; cursor:pointer; background:var(--green); color:#fff; font-size:13px; font-weight:700; }
+.header-btns button:active { background:var(--green2); }
+.header-btns button.alt { background:#21262d; border:1px solid var(--border); color:var(--text); }
+select.theme-sel, select.mode-sel { padding:9px 8px; border-radius:9px; border:1px solid var(--border); background:#21262d; color:var(--text); font-size:12px; }
 
-  main { flex:1; display:flex; overflow:hidden; position:relative; }
-  aside { position:absolute; inset:0 auto 0 0; width:min(84vw, 310px); z-index:30; background:var(--panel); border-right:1px solid var(--border); transform:translateX(-100%); transition:transform .25s ease; display:flex; flex-direction:column; overflow:hidden; }
-  aside.open { transform:translateX(0); box-shadow:8px 0 32px rgba(0,0,0,.6); }
-  #scrim { position:absolute; inset:0; background:rgba(1,4,9,.6); z-index:20; opacity:0; pointer-events:none; transition:opacity .25s; }
-  #scrim.show { opacity:1; pointer-events:auto; }
-  .side-scroll { flex:1; overflow-y:auto; padding:8px; }
-  .side-title { font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); padding:10px 6px 6px; }
-  .proj-item, .file-item { padding:11px 12px; border-radius:9px; font-size:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:2px; word-break:break-all; }
-  .proj-item:active, .file-item:active { background:#21262d; }
-  .proj-item.active, .file-item.active { background:#1f2937; color:var(--accent); }
-  .del-btn { border:none; background:none; color:var(--red); font-size:15px; padding:4px 6px; flex-shrink:0; }
-  .apk-link { display:block; color:var(--green2); text-decoration:none; font-size:12px; padding:2px 12px 8px; word-break:break-all; }
-  .empty { color:var(--muted); padding:14px 12px; font-size:13px; }
+main { flex:1; display:flex; overflow:hidden; position:relative; }
+aside { position:absolute; inset:0 auto 0 0; width:min(84vw,320px); z-index:30; background:var(--panel); border-right:1px solid var(--border); transform:translateX(-100%); transition:transform .25s ease; display:flex; flex-direction:column; overflow:hidden; }
+aside.open { transform:translateX(0); box-shadow:8px 0 32px rgba(0,0,0,.6); }
+#scrim { position:absolute; inset:0; background:rgba(1,4,9,.6); z-index:20; opacity:0; pointer-events:none; transition:opacity .25s; }
+#scrim.show { opacity:1; pointer-events:auto; }
+.side-scroll { flex:1; overflow-y:auto; padding:8px; }
+.side-title { font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); padding:10px 6px 6px; }
+.search-box { padding:4px 8px 8px; }
+.search-box input { width:100%; padding:9px 12px; border-radius:9px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; }
+.proj-item, .file-item { padding:11px 12px; border-radius:9px; font-size:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:2px; word-break:break-all; }
+.proj-item:active, .file-item:active { background:#21262d; }
+.proj-item.active, .file-item.active { background:#1f2937; color:var(--accent); }
+.del-btn { border:none; background:none; color:var(--red); font-size:15px; padding:4px 6px; flex-shrink:0; }
+.apk-link { display:block; color:var(--green2); text-decoration:none; font-size:12px; padding:2px 12px 8px; word-break:break-all; }
+.empty { color:var(--muted); padding:14px 12px; font-size:13px; }
+.no-match { color:var(--muted); padding:10px 12px; font-size:12px; font-style:italic; display:none; }
 
-  section { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
-  .editor-head { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--border); background:var(--panel); flex-wrap:wrap; }
-  #filepath { font-family:monospace; font-size:12px; color:var(--muted); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:80px; }
-  .head-btn { padding:9px 12px; border-radius:9px; border:1px solid var(--border); cursor:pointer; background:#21262d; color:var(--text); font-size:13px; font-weight:600; flex-shrink:0; }
-  .head-btn:active:not(:disabled) { background:var(--border); }
-  .head-btn.green { background:var(--green); border-color:var(--green2); }
-  .head-btn.purple { background:#3b2a63; border-color:var(--purple); color:#e6d9ff; }
-  .head-btn:disabled { opacity:.4; }
-  select.mode { padding:9px 8px; border-radius:9px; border:1px solid var(--border); background:#21262d; color:var(--text); font-size:13px; font-weight:600; }
-  #dirty { color:#e3b341; font-size:12px; flex-shrink:0; display:none; }
-  textarea#editor { flex:1; resize:none; border:0; outline:0; padding:14px; background:var(--bg); color:var(--text); font-family:'Fira Code',Consolas,monospace; font-size:14px; line-height:1.55; tab-size:2; white-space:pre; overflow:auto; }
+section { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+.editor-head { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--border); background:var(--panel); flex-wrap:wrap; }
+#filepath { font-family:monospace; font-size:12px; color:var(--muted); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:80px; }
+.head-btn { padding:9px 12px; border-radius:9px; border:1px solid var(--border); cursor:pointer; background:#21262d; color:var(--text); font-size:13px; font-weight:600; flex-shrink:0; }
+.head-btn:active:not(:disabled) { background:var(--border); }
+.head-btn.green { background:var(--green); border-color:var(--green2); }
+.head-btn:disabled { opacity:.4; }
+#dirty { color:#e3b341; font-size:12px; flex-shrink:0; display:none; }
+.zoom-btns { display:flex; gap:4px; align-items:center; }
+.zoom-btns button { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:#21262d; color:var(--text); font-size:16px; cursor:pointer; font-weight:700; }
+.zoom-btns span { font-size:12px; color:var(--muted); min-width:34px; text-align:center; }
 
-  .tools { display:flex; gap:6px; padding:8px 14px; border-top:1px solid var(--border); background:var(--panel); }
-  .tools button { padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:#21262d; color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer; }
-  .tools button:active { background:var(--border); }
-  .tools button:disabled { opacity:.4; }
+.editor-wrap { flex:1; overflow:hidden; position:relative; }
+.CodeMirror { height:100%; font-size:14px; }
 
-  .build-panel { border-top:1px solid var(--border); background:var(--panel); max-height:30vh; display:flex; flex-direction:column; flex-shrink:0; padding-bottom:env(safe-area-inset-bottom); }
-  .build-tabs { display:flex; gap:10px; padding:8px 14px 0; align-items:center; }
-  .bar { flex:1; height:6px; background:#21262d; border-radius:99px; overflow:hidden; }
-  .bar > div { height:100%; width:0%; background:var(--accent); transition:width .6s; }
-  #statusTxt { font-size:12px; color:var(--muted); white-space:nowrap; }
-  pre#log { margin:8px 14px 10px; padding:10px; background:#010409; border:1px solid #21262d; border-radius:9px; overflow:auto; flex:1; font-size:11.5px; line-height:1.5; white-space:pre-wrap; word-break:break-word; min-height:55px; }
-  a.dl { display:none; margin:0 14px 12px; text-align:center; padding:13px; border-radius:10px; background:#1f6feb; color:#fff; font-weight:700; text-decoration:none; font-size:15px; }
+.tools { display:flex; gap:6px; padding:8px 14px; border-top:1px solid var(--border); background:var(--panel); flex-wrap:wrap; align-items:center; }
+.tools button { padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:#21262d; color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer; }
+.tools button:active { background:var(--border); }
+.tools button:disabled { opacity:.4; }
 
-  dialog { background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:14px; padding:22px; width:min(90vw,380px); }
-  dialog::backdrop { background:rgba(1,4,9,.7); }
-  dialog h3 { margin:0 0 4px; } dialog p { margin:0; font-size:13px; color:var(--muted); }
-  dialog input { width:100%; padding:12px; margin-top:14px; background:var(--bg); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:16px; }
-  .row { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; }
-  .row button { padding:11px 18px; border-radius:9px; border:1px solid var(--border); background:#21262d; color:var(--text); font-size:14px; font-weight:600; cursor:pointer; }
-  .row button.primary { background:var(--green); border-color:var(--green2); }
+#resizer { height:6px; background:var(--border); cursor:ns-resize; flex-shrink:0; touch-action:none; }
+#resizer:active { background:var(--accent); }
+.build-panel { background:var(--panel); height:200px; display:flex; flex-direction:column; flex-shrink:0; padding-bottom:env(safe-area-inset-bottom); }
+.build-tabs { display:flex; gap:10px; padding:8px 14px 0; align-items:center; }
+.bar { flex:1; height:6px; background:#21262d; border-radius:99px; overflow:hidden; }
+.bar > div { height:100%; width:0%; background:var(--accent); transition:width .6s; }
+#statusTxt { font-size:12px; color:var(--muted); white-space:nowrap; }
+pre#log { margin:8px 14px 10px; padding:10px; background:#010409; border:1px solid #21262d; border-radius:9px; overflow:auto; flex:1; font-size:11.5px; line-height:1.5; white-space:pre-wrap; word-break:break-word; min-height:40px; }
+a.dl { display:none; margin:0 14px 12px; text-align:center; padding:13px; border-radius:10px; background:#1f6feb; color:#fff; font-weight:700; text-decoration:none; font-size:15px; }
 
-  @media (min-width:900px) { aside { position:static; transform:none; width:280px; box-shadow:none; } #scrim{display:none;} #burger{display:none;} .build-panel{max-height:40%;} }
+dialog { background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:14px; padding:22px; width:min(90vw,380px); }
+dialog::backdrop { background:rgba(1,4,9,.7); }
+dialog h3 { margin:0 0 4px; } dialog p { margin:0; font-size:13px; color:var(--muted); }
+dialog input { width:100%; padding:12px; margin-top:14px; background:var(--bg); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:16px; }
+.row { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; }
+.row button { padding:11px 18px; border-radius:9px; border:1px solid var(--border); background:#21262d; color:var(--text); font-size:14px; font-weight:600; cursor:pointer; }
+.row button.primary { background:var(--green); border-color:var(--green2); }
+
+@media (min-width:900px) { aside { position:static; transform:none; width:280px; box-shadow:none; } #scrim{display:none;} #burger{display:none;} }
 </style>
 </head>
 <body>
 <header>
   <button id="burger" aria-label="Menu">☰</button>
   <h1>📱 Flutter <span>APK Builder</span></h1>
-  <button id="newBtn">＋ New</button>
+  <select id="themeSel" class="theme-sel" title="Editor theme">
+    <option value="material-darker">Dark</option>
+    <option value="dracula">Dracula</option>
+    <option value="solarized dark">Solarized</option>
+    <option value="nord">Nord</option>
+  </select>
+  <div class="header-btns">
+    <button id="newBtn">＋ New</button>
+  </div>
 </header>
 
 <main>
@@ -80,8 +104,12 @@
     <div class="side-scroll">
       <div class="side-title">Projects</div>
       <div id="projects"><div class="empty">Loading…</div></div>
-      <div class="side-title" id="filesLabel" style="display:none">Files</div>
-      <div id="files"></div>
+      <div id="filesSection" style="display:none">
+        <div class="side-title">Files</div>
+        <div class="search-box"><input id="fileSearch" placeholder="🔍 Search files…"></div>
+        <div id="files"></div>
+        <div class="no-match" id="noMatch">No files match.</div>
+      </div>
     </div>
   </aside>
 
@@ -89,14 +117,21 @@
     <div class="editor-head">
       <span id="filepath">No file selected</span>
       <span id="dirty">● unsaved</span>
+      <div class="zoom-btns">
+        <button id="zoomOut" title="Zoom out">−</button>
+        <span id="zoomLabel">14px</span>
+        <button id="zoomIn" title="Zoom in">＋</button>
+      </div>
       <button id="saveBtn" class="head-btn" disabled>💾 Save</button>
       <button id="buildBtn" class="head-btn green" disabled>🔨 Build</button>
     </div>
-    <textarea id="editor" spellcheck="false" disabled placeholder="Tap ☰ to create/open a project, then pick a file to edit."></textarea>
+    <div class="editor-wrap">
+      <textarea id="editor" spellcheck="false" disabled placeholder="Select or create a project, then pick a file to edit."></textarea>
+    </div>
 
     <div class="tools">
-      <span style="font-size:12px;color:var(--muted);align-self:center">Build mode:</span>
-      <select id="mode" class="mode">
+      <span style="font-size:12px;color:var(--muted);align-self:center">Mode:</span>
+      <select id="mode" class="mode-sel">
         <option value="full">Full APK</option>
         <option value="patch">Patch</option>
         <option value="both">Full + Patch</option>
@@ -105,7 +140,8 @@
       <button id="analyzeBtn" disabled>analyze</button>
     </div>
 
-    <div class="build-panel">
+    <div id="resizer"></div>
+    <div class="build-panel" id="buildPanel">
       <div class="build-tabs">
         <div class="bar"><div id="barfill"></div></div>
         <span id="statusTxt">idle</span>
@@ -125,15 +161,73 @@
   </div>
 </dialog>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
 <script>
 const API = "https://princekauz-flutter-apk-builder.hf.space";
 const $ = id => document.getElementById(id);
-let currentProject=null, currentFile=null, dirty=false, polling=false;
+let currentProject=null, currentFile=null, dirty=false, polling=false, fontSize=14;
 
+// ---- CodeMirror ----
+const cm = CodeMirror.fromTextArea($('editor'), {
+  mode: 'text/x-dart',
+  theme: 'material-darker',
+  lineNumbers: true,
+  autoCloseBrackets: true,
+  matchBrackets: true,
+  autoCloseTags: true,
+  indentUnit: 2,
+  tabSize: 2,
+  indentWithTabs: false,
+  extraKeys: {
+    'Tab': cm => cm.replaceSelection('  '),
+    'Ctrl-S': () => { saveFile(); },
+    'Cmd-S': () => { saveFile(); },
+    'Ctrl-Space': 'autocomplete',
+  }
+});
+cm.on('change', () => { if(!suppressChange) setDirty(true); });
+let suppressChange = false;
+
+function setFontSize(px) {
+  fontSize = Math.max(10, Math.min(28, px));
+  cm.getWrapperElement().style.fontSize = fontSize + 'px';
+  cm.refresh();
+  $('zoomLabel').textContent = fontSize + 'px';
+}
+$('zoomIn').onclick = () => setFontSize(fontSize + 1);
+$('zoomOut').onclick = () => setFontSize(fontSize - 1);
+
+$('themeSel').onchange = e => cm.setOption('theme', e.target.value);
+
+// ---- drawer ----
 const drawer=$('drawer'), scrim=$('scrim');
 function openDrawer(o){ drawer.classList.toggle('open',o); scrim.classList.toggle('show',o); }
 $('burger').onclick=()=>openDrawer(!drawer.classList.contains('open'));
 scrim.onclick=()=>openDrawer(false);
+
+// ---- file search ----
+$('fileSearch').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  const items = $('files').querySelectorAll('.file-item');
+  let visible = 0;
+  items.forEach(it => {
+    const match = it.textContent.toLowerCase().includes(q);
+    it.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  $('noMatch').style.display = visible === 0 ? 'block' : 'none';
+});
 
 // ---- projects ----
 async function loadProjects(){
@@ -149,29 +243,26 @@ async function loadProjects(){
     del.onclick=async e=>{ e.stopPropagation();
       if(!confirm(`Delete project "${p.name}"?`))return;
       await fetch(API+'/api/project/'+p.name,{method:'DELETE'});
-      if(currentProject===p.name){ currentProject=null;currentFile=null; $('editor').value='';$('editor').disabled=true; $('files').innerHTML='';$('filesLabel').style.display='none'; $('filepath').textContent='No file selected'; $('buildBtn').disabled=true; $('pubgetBtn').disabled=true;$('analyzeBtn').disabled=true; }
+      if(currentProject===p.name){ currentProject=null;currentFile=null;
+        suppressChange=true; cm.setValue(''); cm.setOption('readOnly','nocursor'); suppressChange=false;
+        $('files').innerHTML=''; $('filesSection').style.display='none';
+        $('filepath').textContent='No file selected'; $('buildBtn').disabled=true; $('pubgetBtn').disabled=true; $('analyzeBtn').disabled=true; }
       loadProjects();
     };
     div.append(span,del);
     div.onclick=()=>selectProject(p.name);
     wrap.appendChild(div);
-    // persistent APK link if a build exists
     if(p.builds && p.builds.full){
       const a=document.createElement('a');
       a.className='apk-link'; a.href=API+`/api/download/${p.name}/full`; a.target='_blank';
-      a.textContent='⬇ Download APK ('+(p.builds.full.size_mb||'?')+' MB)';
-      wrap.appendChild(a);
-    }else if(p.builds && p.builds.patch){
-      const a=document.createElement('a');
-      a.className='apk-link'; a.href=API+`/api/download/${p.name}/patch`; a.target='_blank';
-      a.textContent='⬇ Patch APK available';
+      a.textContent='⬇ APK ('+(p.builds.full.size_mb||'?')+' MB)';
       wrap.appendChild(a);
     }
     el.appendChild(wrap);
   }
 }
 
-async function selectProject(p){ currentProject=p; $('buildBtn').disabled=false; $('pubgetBtn').disabled=false; $('analyzeBtn').disabled=false; $('dl').style.display='none'; $('filesLabel').style.display='block'; await loadProjects(); await loadFiles(); }
+async function selectProject(p){ currentProject=p; $('buildBtn').disabled=false; $('pubgetBtn').disabled=false; $('analyzeBtn').disabled=false; $('dl').style.display='none'; $('filesSection').style.display='block'; $('fileSearch').value=''; await loadProjects(); await loadFiles(); }
 
 $('newBtn').onclick=()=>{ openDrawer(false); $('dlg').showModal(); $('nameInput').focus(); };
 $('createBtn').onclick=async()=>{
@@ -192,61 +283,67 @@ async function loadFiles(){ if(!currentProject)return;
   const el=$('files'); el.innerHTML='';
   for(const f of(data.files||[])){ const d=document.createElement('div'); d.className='file-item'+(f===currentFile?' active':''); d.textContent=f; d.onclick=()=>openFile(f); el.appendChild(d); }
 }
+
 async function openFile(path){ if(dirty&&!confirm('Discard unsaved changes?'))return;
   const r=await fetch(`${API}/api/project/${currentProject}/file?path=${encodeURIComponent(path)}`);
   const j=await r.json(); if(!r.ok){ alert(j.error); return; }
-  currentFile=path; $('editor').value=j.content; $('editor').disabled=false; $('filepath').textContent=`${currentProject}/${path}`; setDirty(false); openDrawer(false); loadFiles();
+  currentFile=path;
+  suppressChange=true;
+  cm.setValue(j.content);
+  cm.setOption('readOnly',false);
+  setModeForFile(path);
+  suppressChange=false;
+  $('filepath').textContent=`${currentProject}/${path}`;
+  setDirty(false); openDrawer(false); loadFiles();
 }
-$('editor').addEventListener('input',()=>setDirty(true));
+
+function setModeForFile(path){
+  let mode = 'text/x-dart';
+  if(path.endsWith('.yaml')||path.endsWith('.yml')) mode='text/x-yaml';
+  else if(path.endsWith('.xml')) mode='xml';
+  else if(path.endsWith('.md')) mode='markdown';
+  else if(path.endsWith('.gradle')||path.endsWith('.sh')||path.endsWith('.properties')) mode='shell';
+  else if(path.endsWith('.json')||path.endsWith('.js')) mode='javascript';
+  cm.setOption('mode',mode);
+}
+
 function setDirty(v){ dirty=v; $('dirty').style.display=v?'inline':'none'; $('saveBtn').disabled=!v||!currentFile; }
 $('saveBtn').onclick=saveFile;
 async function saveFile(){ if(!currentFile)return;
-  const r=await fetch(`${API}/api/project/${currentProject}/file?path=${encodeURIComponent(currentFile)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:$('editor').value})});
+  const r=await fetch(`${API}/api/project/${currentProject}/file?path=${encodeURIComponent(currentFile)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:cm.getValue()})});
   if(!r.ok){ const j=await r.json().catch(()=>({})); alert('Save failed: '+(j.error||r.status)); return; }
   setDirty(false); logLine(`💾 Saved ${currentFile}`);
 }
-document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveFile();} });
 
 // ---- build ----
-$('buildBtn').onclick=()=>{
-  if(polling)return;
-  if(dirty&&!confirm('Unsaved changes — build anyway?'))return;
-  startJob('build', {mode:$('mode').value});
-  openDrawer(false);
-};
+$('buildBtn').onclick=()=>{ if(polling)return; if(dirty&&!confirm('Unsaved changes — build anyway?'))return; startJob('build',{mode:$('mode').value}); openDrawer(false); };
+$('pubgetBtn').onclick=()=>{ if(polling)return; startJob('pubget'); };
+$('analyzeBtn').onclick=()=>{ if(polling)return; startJob('analyze'); };
 
-// ---- terminal tools ----
-$('pubgetBtn').onclick=async()=>{ if(polling)return; startJob('pubget'); };
-$('analyzeBtn').onclick=async()=>{ if(polling)return; startJob('analyze'); };
-
-async function startJob(kind, body){
+async function startJob(kind,body){
   polling=true; $('buildBtn').disabled=true; $('pubgetBtn').disabled=true; $('analyzeBtn').disabled=true;
   $('dl').style.display='none'; $('log').textContent=''; setStatus('starting…',5);
   try{
     let url=`${API}/api/project/${currentProject}/${kind}`;
-    const opts={method:'POST'};
-    if(body){ url+=`?mode=${body.mode}`; }
-    const r=await fetch(url,opts); const j=await r.json();
+    if(body&&body.mode)url+=`?mode=${body.mode}`;
+    const r=await fetch(url,{method:'POST'}); const j=await r.json();
     if(!r.ok)throw new Error(j.error||r.status);
     poll(j.job_id);
   }catch(e){ logLine('❌ '+e.message); setStatus('failed to start',0); endJob(); }
 }
 
 async function poll(jobId){
-  let pct=15, t0=Date.now();
+  let pct=15,t0=Date.now();
   while(true){
     const s=await(await fetch(`${API}/api/status/${jobId}`)).json();
-    if(s.status==='pub_get'){ pct=Math.max(pct,30); setStatus('resolving dependencies…',pct); }
-    else if(s.status==='building'){ const flat=Math.min(85,15+Math.floor((Date.now()-t0)/90000*70)); setStatus('building APK…',flat); }
-    else if(s.status==='running'){ pct=Math.max(pct,30); setStatus('running…',pct); }
+    if(s.status==='pub_get'){pct=Math.max(pct,30);setStatus('resolving dependencies…',pct);}
+    else if(s.status==='building'){setStatus('building APK…',Math.min(85,15+Math.floor((Date.now()-t0)/90000*70)));}
+    else if(s.status==='running'){pct=Math.max(pct,30);setStatus('running…',pct);}
     else if(s.status==='done'){
-      setStatus(s.download_url?('done! '+(s.size_mb||'')+ ' MB'):'complete',100);
+      setStatus(s.download_url?('done! '+(s.size_mb||'')+' MB'):'complete',100);
       logLine(s.log||'✅ Complete.');
-      if(s.download_url){ setDL(s.download_url); }
-      else { logLine('(no APK download for this job)'); }
-      // refresh project list to show persistent link
-      loadProjects();
-      break;
+      if(s.download_url){ const dl=$('dl'); dl.style.display='block'; dl.href=s.download_url.startsWith('http')?s.download_url:API+s.download_url; }
+      loadProjects(); break;
     }
     else if(s.status==='error'){ setStatus('error',0); logLine('❌ '+(s.log||'failed')); break; }
     await new Promise(r=>setTimeout(r,5000));
@@ -255,17 +352,28 @@ async function poll(jobId){
 }
 function endJob(){ polling=false; $('buildBtn').disabled=false; $('pubgetBtn').disabled=false; $('analyzeBtn').disabled=false; }
 
-function setDL(url){
-  const dl=$('dl'); dl.style.display='block';
-  // url is server-relative like /api/download/name/mode
-  dl.href = url.startsWith('http') ? url : API+url;
-}
+// ---- resizer ----
+const resizer=$('resizer'), panel=$('buildPanel');
+let resizing=false, startY=0, startH=0;
+resizer.addEventListener('pointerdown',e=>{
+  resizing=true; startY=e.clientY; startH=panel.offsetHeight;
+  resizer.setPointerCapture(e.pointerId); e.preventDefault();
+});
+resizer.addEventListener('pointermove',e=>{
+  if(!resizing)return;
+  const h=Math.max(60,Math.min(window.innerHeight*0.7,startY-e.clientY+startH));
+  panel.style.height=h+'px';
+});
+resizer.addEventListener('pointerup',()=>{resizing=false;});
+resizer.addEventListener('pointercancel',()=>{resizing=false;});
 
+// ---- helpers ----
 function setBar(p){ $('barfill').style.width=p+'%'; }
 function setStatus(t,p){ $('statusTxt').textContent=t; if(p!==undefined)setBar(p); }
 function logLine(t){ $('log').textContent+=t+'\n'; $('log').scrollTop=999999; }
 
 loadProjects();
+setFontSize(14);
 </script>
 </body>
 </html>
