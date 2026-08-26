@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flutter APK Builder</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1e3a5f 0%, #0d1117 55%);
+    color: #e6edf3; display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .card {
+    width: 100%; max-width: 640px; background: #161b22ee; border: 1px solid #30363d;
+    border-radius: 16px; padding: 32px; box-shadow: 0 16px 48px rgba(0,0,0,.5);
+  }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  h1 span { color: #58a6ff; }
+  p.sub { margin: 0 0 24px; color: #8b949e; font-size: 14px; }
+  .drop {
+    border: 2px dashed #30363d; border-radius: 12px; padding: 36px 16px; text-align: center;
+    cursor: pointer; transition: all .2s;
+  }
+  .drop:hover, .drop.over { border-color: #58a6ff; background: #58a6ff11; }
+  .drop strong { color: #58a6ff; }
+  input[type=file] { display: none; }
+  button {
+    width: 100%; margin-top: 18px; padding: 13px; font-size: 16px; font-weight: 600;
+    border: 0; border-radius: 10px; cursor: pointer;
+    background: linear-gradient(135deg, #238636, #2ea043); color: #fff;
+  }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .status { margin-top: 18px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .bar { height: 8px; background: #21262d; border-radius: 99px; overflow: hidden; margin-top: 10px; display: none; }
+  .bar > div { height: 100%; width: 0%; background: #58a6ff; transition: width .6s; border-radius: 99px; }
+  a.dl {
+    display: none; margin-top: 18px; text-align: center; padding: 13px; border-radius: 10px;
+    background: #1f6feb; color: #fff; font-weight: 600; text-decoration: none; font-size: 16px;
+  }
+  .err { color: #f85149; }
+  .ok { color: #3fb950; }
+  footer { margin-top: 24px; text-align: center; font-size: 12px; color: #8b949e; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>📱 Flutter <span>APK Builder</span></h1>
+  <p class="sub">Upload your Flutter project as a <code>.zip</code> (must contain <code>pubspec.yaml</code>). We build the release APK and give you a download link.</p>
+
+  <label class="drop" id="drop">
+    📦 Drop your project <strong>.zip</strong> here or click to browse
+    <input type="file" id="file" accept=".zip">
+  </label>
+
+  <button id="btn" disabled>🔨 Build APK</button>
+  <div class="bar" id="bar"><div id="barfill"></div></div>
+  <div class="status" id="status"></div>
+  <a class="dl" id="dl">⬇️ Download APK</a>
+
+  <footer>Powered by <a href="https://princekauz-flutter-apk-builder.hf.space/docs" style="color:#58a6ff">Flutter API on HF Spaces</a></footer>
+</div>
+
+<script>
+const API = "https://princekauz-flutter-apk-builder.hf.space";
+const fileInput = document.getElementById('file');
+const drop = document.getElementById('drop');
+const btn = document.getElementById('btn');
+const statusEl = document.getElementById('status');
+const bar = document.getElementById('bar'), barfill = document.getElementById('barfill');
+const dl = document.getElementById('dl');
+
+fileInput.addEventListener('change', () => btn.disabled = !fileInput.files.length);
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('over');
+  if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; btn.disabled = false; }
+});
+
+function setBar(p) { bar.style.display = 'block'; barfill.style.width = p + '%'; }
+
+btn.addEventListener('click', async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  btn.disabled = true; dl.style.display = 'none';
+  statusEl.className = 'status'; statusEl.textContent = '⬆️ Uploading project…';
+  setBar(5);
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const r = await fetch(API + '/api/build', { method: 'POST', body: fd });
+    if (!r.ok) throw new Error('Upload failed: HTTP ' + r.status);
+    const { job_id } = await r.json();
+    statusEl.textContent = `✅ Uploaded. Job ID: ${job_id}\n🔨 Building (takes several minutes)…`;
+    setBar(20);
+
+    // poll
+    let pct = 20;
+    while (true) {
+      await new Promise(s => setTimeout(s, 8000));
+      const s = await (await fetch(`${API}/api/status/${job_id}`)).json();
+      if (s.status === 'pub_get') { pct = Math.max(pct, 30); setBar(pct); statusEl.textContent = '📦 Resolving dependencies…'; }
+      else if (s.status === 'building') { pct = Math.min(pct + 7, 90); setBar(pct); statusEl.textContent = '🔨 Gradle/Flutter build in progress…'; }
+      else if (s.status === 'done') {
+        setBar(100);
+        statusEl.className = 'status ok';
+        statusEl.textContent = `🎉 Build succeeded! ${s.apk_filename} (${s.size_mb} MB)`;
+        dl.href = `${API}/api/download/${job_id}`;
+        dl.style.display = 'block';
+        break;
+      } else if (s.status === 'error') {
+        setBar(0); statusEl.className = 'status err';
+        statusEl.textContent = '❌ Build failed:\n' + (s.log || 'unknown error');
+        break;
+      }
+    }
+  } catch (e) {
+    statusEl.className = 'status err';
+    statusEl.textContent = '❌ ' + e.message;
+  }
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>
