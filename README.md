@@ -8,6 +8,12 @@ Send a Flutter project (zip upload, GitHub repo import, or file-by-file via API)
 signed release APK (or split per-ABI / AAB mode). No Android Studio, no local SDK, no Gradle
 setup, no CI YAML. Full Android toolchain runs server-side; you get a download link.
 
+## One-liner CLI
+
+```bash
+python3 kauz_build.py build ./my-app   # from https://github.com/midMarkMark/kauz-build
+```
+
 ## Quickstart
 
 ```bash
