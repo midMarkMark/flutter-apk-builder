@@ -1,5 +1,7 @@
 # flutter-apk-builder — Repo → Signed APK, as a REST API
 
+**Guide:** [How to build a Flutter APK without Android Studio](https://dev.to/princekauz/how-to-build-a-flutter-apk-without-android-studio-or-any-local-sdk-364p)
+
 **Live API + docs:** https://princekauz-flutter-apk-builder.hf.space/docs
 
 Send a Flutter project (zip upload, GitHub repo import, or file-by-file via API), get back a
