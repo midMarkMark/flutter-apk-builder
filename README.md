@@ -54,7 +54,7 @@ Self-serve builds are the API above. If you'd rather not touch the API at all:
   diff of exactly what we changed and why.
 - **Build credits** — 10 prepaid builds for $79, no expiry, API access included.
 
-Request a build or ask anything: **newmark00010@gmail.com** — replies within a day.
+Request a build or ask anything: **contact.eventify.app@gmail.com** — replies within a day.
 
 ## Tech
 
